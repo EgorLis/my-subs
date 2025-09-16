@@ -1,0 +1,42 @@
+services:
+  # Ваш основной сервис
+  my-subs:
+    build:
+      context: ../..                  # Путь к корню репозитория!
+      dockerfile: deployments/docker/Dockerfile
+    env_file:
+      - ../../.env.docker                    # Путь к .env файлу в корне!
+    environment:
+      - APP_ENV=docker
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+    ports:
+      - "${APP_PORT}:8080"
+    depends_on:
+      - db
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # База данных
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  app-network:
+    driver: bridge
