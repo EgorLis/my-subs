@@ -1,0 +1,48 @@
+package health
+
+import (
+	"context"
+	"net/http"
+	"time"
+
+	v1 "github.com/EgorLis/my-subs/internal/transport/web/v1"
+)
+
+type Handler struct {
+	DBPinger interface {
+		Ping(context.Context) error
+	}
+}
+
+// Liveness godoc
+// @Summary      Liveness probe
+// @Description  Проверка, жив ли сервис (не зависит от БД)
+// @Tags         health
+// @Produce      json
+// @Success      200  {string}  string  "ok"
+// @Router       /healthz [get]
+func (h *Handler) Liveness(w http.ResponseWriter, r *http.Request) {
+	v1.WriteJSON(w, http.StatusOK, "ok")
+}
+
+// Readiness godoc
+// @Summary      Readiness probe
+// @Description  Проверка готовности сервиса (включая пинг базы данных)
+// @Tags         health
+// @Produce      json
+// @Success      200  {string}  string  "ready"
+// @Failure      503  {object}  map[string]string
+// @Router       /readyz [get]
+func (h *Handler) Readiness(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 5000*time.Millisecond)
+	defer cancel()
+
+	err := h.DBPinger.Ping(ctx)
+
+	if err != nil {
+		v1.WriteError(w, http.StatusServiceUnavailable, err.Error())
+		return
+	}
+
+	v1.WriteJSON(w, http.StatusOK, "ready")
+}

@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	a, err := app.Build()
+	a, err := app.BuildMock()
 	if err != nil {
 		log.Println("app build error:")
 		panic(err)
