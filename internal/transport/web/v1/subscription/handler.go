@@ -19,6 +19,7 @@ const (
 )
 
 type Handler struct {
+	Log  *log.Logger
 	Repo domain.SubscriptionRepository
 }
 
@@ -41,6 +42,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	var req CreateRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.Log.Printf("unmarshal error: %v", err)
 		v1.WriteError(w, http.StatusBadRequest, "invalid JSON")
 		return
 	}
@@ -48,6 +50,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	if err := ValidateCreateRequest(req); err != nil {
+		h.Log.Printf("validation error: %v", err)
 		v1.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -59,16 +62,19 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// Проверка на timeout / отмену контекста
 		if v1.IsTimeout(err) {
+			h.Log.Printf("request timed out: %v", err)
 			v1.WriteError(w, http.StatusGatewayTimeout, "request timed out")
 			return
 		}
 
-		log.Printf("repo error while add value: %v", err)
+		h.Log.Printf("repo error while add value: %v", err)
 		v1.WriteError(w, http.StatusInternalServerError, "")
 		return
 	}
 
 	resp := &CUDResponse{SubID: subWithID.ID, Status: CREATED}
+
+	h.Log.Printf("subscription created, id: %s", subWithID.ID)
 
 	v1.WriteJSON(w, http.StatusOK, resp)
 }
@@ -89,6 +95,7 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
 	if err := ValidateGUID(id); err != nil {
+		h.Log.Printf("validation error: %v", err)
 		v1.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -100,21 +107,25 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// Проверка на timeout / отмену контекста
 		if v1.IsTimeout(err) {
+			h.Log.Printf("request timed out: %v", err)
 			v1.WriteError(w, http.StatusGatewayTimeout, "request timed out")
 			return
 		}
 
 		if errors.Is(err, domain.ErrNotFound) {
+			h.Log.Printf("row with id: %s, not found", id)
 			v1.WriteError(w, http.StatusNotFound, "not found")
 			return
 		}
 
-		log.Printf("repo error while geting value: %v", err)
+		h.Log.Printf("repo error while geting value: %v", err)
 		v1.WriteError(w, http.StatusInternalServerError, "")
 		return
 	}
 
 	resp := MapDomainToDTO(sub)
+
+	h.Log.Printf("subscription returned, id: %s", id)
 
 	v1.WriteJSON(w, http.StatusOK, resp)
 }
@@ -146,6 +157,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	if err := ValidateUpdateRequest(req); err != nil {
+		h.Log.Printf("validation error: %v", err)
 		v1.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -155,21 +167,25 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	if err := h.Repo.UpdateSub(ctx, sub); err != nil {
 		// Проверка на timeout / отмену контекста
 		if v1.IsTimeout(err) {
+			h.Log.Printf("request timed out: %v", err)
 			v1.WriteError(w, http.StatusGatewayTimeout, "request timed out")
 			return
 		}
 
 		if errors.Is(err, domain.ErrNotFound) {
+			h.Log.Printf("row with id: %s, not found", req.ID)
 			v1.WriteError(w, http.StatusNotFound, "not found")
 			return
 		}
 
-		log.Printf("repo error while updating: %v", err)
+		h.Log.Printf("repo error while updating: %v", err)
 		v1.WriteError(w, http.StatusInternalServerError, "")
 		return
 	}
 
 	resp := &CUDResponse{SubID: req.ID, Status: UPDATED}
+
+	h.Log.Printf("subscription updated, id: %s", req.ID)
 
 	v1.WriteJSON(w, http.StatusOK, resp)
 }
@@ -190,6 +206,7 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
 	if err := ValidateGUID(id); err != nil {
+		h.Log.Printf("validation error: %v", err)
 		v1.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -200,21 +217,25 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	if err := h.Repo.DeleteSub(ctx, id); err != nil {
 		// Проверка на timeout / отмену контекста
 		if v1.IsTimeout(err) {
+			h.Log.Printf("request timed out: %v", err)
 			v1.WriteError(w, http.StatusGatewayTimeout, "request timed out")
 			return
 		}
 
 		if errors.Is(err, domain.ErrNotFound) {
+			h.Log.Printf("row with id: %s, not found", id)
 			v1.WriteError(w, http.StatusNotFound, "not found")
 			return
 		}
 
-		log.Printf("repo error while deleting: %v", err)
+		h.Log.Printf("repo error while deleting: %v", err)
 		v1.WriteError(w, http.StatusInternalServerError, "")
 		return
 	}
 
 	resp := &CUDResponse{SubID: id, Status: DELETED}
+
+	h.Log.Printf("subscription deleted, id: %s", id)
 
 	v1.WriteJSON(w, http.StatusOK, resp)
 }
@@ -236,16 +257,19 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// Проверка на timeout / отмену контекста
 		if v1.IsTimeout(err) {
+			h.Log.Printf("request timed out: %v", err)
 			v1.WriteError(w, http.StatusGatewayTimeout, "request timed out")
 			return
 		}
 
-		log.Printf("repo error while get values: %v", err)
+		h.Log.Printf("repo error while get values: %v", err)
 		v1.WriteError(w, http.StatusInternalServerError, "")
 		return
 	}
 
 	resp := &ListResponse{Subs: MapDomainListToDTO(subs)}
+
+	h.Log.Println("subscriptions list returned")
 
 	v1.WriteJSON(w, http.StatusOK, resp)
 }
@@ -275,17 +299,20 @@ func (h *Handler) TotalCost(w http.ResponseWriter, r *http.Request) {
 
 	fromYM, err := YMFromStr(fromStr)
 	if err != nil {
+		h.Log.Printf("convertation error: %v", err)
 		v1.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	toYM, err := YMFromStr(toStr)
 	if err != nil {
+		h.Log.Printf("convertation error: %v", err)
 		v1.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	if err := ValidateTotalCostQuery(userIDStr, serviceName, fromYM, toYM); err != nil {
+		h.Log.Printf("validation error: %v", err)
 		v1.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -299,17 +326,21 @@ func (h *Handler) TotalCost(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// Проверка на timeout / отмену контекста
 		if v1.IsTimeout(err) {
+			h.Log.Printf("request timed out: %v", err)
 			v1.WriteError(w, http.StatusGatewayTimeout, "request timed out")
 			return
 		}
 
-		log.Printf("repo error while get total cost: %v", err)
+		h.Log.Printf("repo error while get total cost: %v", err)
 		v1.WriteError(w, http.StatusInternalServerError, "")
 		return
 	}
 
 	resp := &TotalCostResponse{UserID: userIDStr, ServiceName: serviceName,
 		From: fromYM, To: toYM, TotalCost: totalCost}
+
+	h.Log.Printf("user_id = %s, service_name = %s, from  %s, to %s,  total cost =  %d",
+		userIDStr, serviceName, fromStr, toStr, totalCost)
 
 	v1.WriteJSON(w, http.StatusOK, resp)
 }

@@ -2,6 +2,7 @@ package health
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"time"
 
@@ -9,6 +10,7 @@ import (
 )
 
 type Handler struct {
+	Log      *log.Logger
 	DBPinger interface {
 		Ping(context.Context) error
 	}
@@ -40,7 +42,8 @@ func (h *Handler) Readiness(w http.ResponseWriter, r *http.Request) {
 	err := h.DBPinger.Ping(ctx)
 
 	if err != nil {
-		v1.WriteError(w, http.StatusServiceUnavailable, err.Error())
+		h.Log.Printf("readiness error: %v", err)
+		v1.WriteError(w, http.StatusServiceUnavailable, "")
 		return
 	}
 

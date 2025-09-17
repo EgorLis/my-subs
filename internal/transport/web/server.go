@@ -20,19 +20,21 @@ type Server struct {
 	cfg    *config.Config
 }
 
-func New(log *log.Logger, cfg *config.Config, repo domain.SubscriptionRepository) *Server {
-	healthHandler := &health.Handler{DBPinger: repo}
-	subHandler := &subscription.Handler{Repo: repo}
+func New(logger *log.Logger, cfg *config.Config, repo domain.SubscriptionRepository) *Server {
+	healthLog := log.New(logger.Writer(), logger.Prefix()+"[health] ", logger.Flags())
+	subLog := log.New(logger.Writer(), logger.Prefix()+"[subscriptions] ", logger.Flags())
+	healthHandler := &health.Handler{DBPinger: repo, Log: healthLog}
+	subHandler := &subscription.Handler{Repo: repo, Log: subLog}
 	srv := &http.Server{
 		Addr:              cfg.AppPort,
-		Handler:           newRouter(healthHandler, subHandler, log),
+		Handler:           newRouter(healthHandler, subHandler, logger),
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      10 * time.Second,
 		MaxHeaderBytes:    1 << 20,
 		ReadHeaderTimeout: 2 * time.Second,
 		IdleTimeout:       60 * time.Second,
 	}
-	return &Server{server: srv, cfg: cfg, log: log}
+	return &Server{server: srv, cfg: cfg, log: logger}
 }
 
 func (ws *Server) Run() {
