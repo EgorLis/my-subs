@@ -25,6 +25,10 @@ func (r *Repo) Ping(ctx context.Context) error {
 	return nil
 }
 
+func (r *Repo) Close() {
+
+}
+
 func (r *Repo) AddSub(ctx context.Context, sub domain.Subscription) (domain.Subscription, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()

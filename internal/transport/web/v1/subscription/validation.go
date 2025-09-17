@@ -45,8 +45,8 @@ func ValidateCreateRequest(req CreateRequest) error {
 	if strings.TrimSpace(req.ServiceName) == "" {
 		errs = append(errs, "service_name: required")
 	}
-	if req.Price < 0 {
-		errs = append(errs, "price: must be >= 0")
+	if req.Price <= 0 {
+		errs = append(errs, "price: must be > 0")
 	}
 	if err := ValidateGUID(req.UserID); err != nil {
 		errs = append(errs, "user_id: "+err.Error())

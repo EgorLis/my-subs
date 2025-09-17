@@ -16,6 +16,7 @@ type Config struct {
 	DBUser     string `mapstructure:"DB_USER"`
 	DBPassword string `mapstructure:"DB_PASSWORD"`
 	DBName     string `mapstructure:"DB_NAME"`
+	DBScheme   string `mapstructure:"DB_SCHEME"`
 	AppPort    string `mapstructure:"APP_PORT"`
 }
 
@@ -27,6 +28,7 @@ func (c *Config) String() string {
 	sb.WriteString(fmt.Sprintf("  DBPort: %d\n", c.DBPort))
 	sb.WriteString(fmt.Sprintf("  DBUser: %s\n", c.DBUser))
 	sb.WriteString(fmt.Sprintf("  DBName: %s\n", c.DBName))
+	sb.WriteString(fmt.Sprintf("  DBScheme : %s\n", c.DBScheme))
 	sb.WriteString(fmt.Sprintf("  AppPort: %s\n", c.AppPort))
 
 	// Пароль обычно маскируют в логах
@@ -54,7 +56,7 @@ func LoadFromEnv() (*Config, error) {
 	// регистрируем интересующие ключи окружения
 	keys := []string{
 		"APP_ENV", "APP_PORT",
-		"DB_HOST", "DB_PORT", "DB_USER", "DB_PASSWORD", "DB_NAME",
+		"DB_HOST", "DB_PORT", "DB_USER", "DB_PASSWORD", "DB_NAME", "DB_SCHEME",
 	}
 
 	for _, k := range keys {
@@ -66,4 +68,15 @@ func LoadFromEnv() (*Config, error) {
 		return nil, fmt.Errorf("unable to decode config: %w", err)
 	}
 	return &cfg, nil
+}
+
+func (c *Config) GetDSN() string {
+	return fmt.Sprintf(
+		"postgres://%s:%s@%s:%d/%s?sslmode=disable",
+		c.DBUser,
+		c.DBPassword,
+		c.DBHost,
+		c.DBPort,
+		c.DBName,
+	)
 }

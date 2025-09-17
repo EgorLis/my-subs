@@ -56,8 +56,8 @@ func newRouter(hh *health.Handler, sh *subscription.Handler, log *log.Logger) ht
 	mux := http.NewServeMux()
 
 	// health
-	mux.HandleFunc("GET /healthz", hh.Liveness)
-	mux.HandleFunc("GET /readyz", hh.Readiness)
+	mux.HandleFunc("GET /v1/healthz", hh.Liveness)
+	mux.HandleFunc("GET /v1/readyz", hh.Readiness)
 
 	// subscriptions CRUDL
 	mux.HandleFunc("POST /v1/subscriptions", limitBody(16<<10, sh.Create))     // 16 KB

@@ -67,7 +67,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		h.Log.Printf("repo error while add value: %v", err)
+		h.Log.Println("repo error while add value")
 		v1.WriteError(w, http.StatusInternalServerError, "")
 		return
 	}
@@ -107,18 +107,16 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// Проверка на timeout / отмену контекста
 		if v1.IsTimeout(err) {
-			h.Log.Printf("request timed out: %v", err)
 			v1.WriteError(w, http.StatusGatewayTimeout, "request timed out")
 			return
 		}
 
 		if errors.Is(err, domain.ErrNotFound) {
-			h.Log.Printf("row with id: %s, not found", id)
 			v1.WriteError(w, http.StatusNotFound, "not found")
 			return
 		}
 
-		h.Log.Printf("repo error while geting value: %v", err)
+		h.Log.Println("repo error while geting value")
 		v1.WriteError(w, http.StatusInternalServerError, "")
 		return
 	}
@@ -167,18 +165,16 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	if err := h.Repo.UpdateSub(ctx, sub); err != nil {
 		// Проверка на timeout / отмену контекста
 		if v1.IsTimeout(err) {
-			h.Log.Printf("request timed out: %v", err)
 			v1.WriteError(w, http.StatusGatewayTimeout, "request timed out")
 			return
 		}
 
 		if errors.Is(err, domain.ErrNotFound) {
-			h.Log.Printf("row with id: %s, not found", req.ID)
 			v1.WriteError(w, http.StatusNotFound, "not found")
 			return
 		}
 
-		h.Log.Printf("repo error while updating: %v", err)
+		h.Log.Println("repo error while updating")
 		v1.WriteError(w, http.StatusInternalServerError, "")
 		return
 	}
@@ -217,18 +213,16 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	if err := h.Repo.DeleteSub(ctx, id); err != nil {
 		// Проверка на timeout / отмену контекста
 		if v1.IsTimeout(err) {
-			h.Log.Printf("request timed out: %v", err)
 			v1.WriteError(w, http.StatusGatewayTimeout, "request timed out")
 			return
 		}
 
 		if errors.Is(err, domain.ErrNotFound) {
-			h.Log.Printf("row with id: %s, not found", id)
 			v1.WriteError(w, http.StatusNotFound, "not found")
 			return
 		}
 
-		h.Log.Printf("repo error while deleting: %v", err)
+		h.Log.Println("repo error while deleting")
 		v1.WriteError(w, http.StatusInternalServerError, "")
 		return
 	}
@@ -257,12 +251,11 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// Проверка на timeout / отмену контекста
 		if v1.IsTimeout(err) {
-			h.Log.Printf("request timed out: %v", err)
 			v1.WriteError(w, http.StatusGatewayTimeout, "request timed out")
 			return
 		}
 
-		h.Log.Printf("repo error while get values: %v", err)
+		h.Log.Printf("repo error while get values")
 		v1.WriteError(w, http.StatusInternalServerError, "")
 		return
 	}
@@ -326,12 +319,11 @@ func (h *Handler) TotalCost(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// Проверка на timeout / отмену контекста
 		if v1.IsTimeout(err) {
-			h.Log.Printf("request timed out: %v", err)
 			v1.WriteError(w, http.StatusGatewayTimeout, "request timed out")
 			return
 		}
 
-		h.Log.Printf("repo error while get total cost: %v", err)
+		h.Log.Println("repo error while get total cost")
 		v1.WriteError(w, http.StatusInternalServerError, "")
 		return
 	}

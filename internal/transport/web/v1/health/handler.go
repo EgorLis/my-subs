@@ -22,7 +22,7 @@ type Handler struct {
 // @Tags         health
 // @Produce      json
 // @Success      200  {string}  string  "ok"
-// @Router       /healthz [get]
+// @Router       /v1/healthz [get]
 func (h *Handler) Liveness(w http.ResponseWriter, r *http.Request) {
 	v1.WriteJSON(w, http.StatusOK, "ok")
 }
@@ -34,7 +34,7 @@ func (h *Handler) Liveness(w http.ResponseWriter, r *http.Request) {
 // @Produce      json
 // @Success      200  {string}  string  "ready"
 // @Failure      503  {object}  map[string]string
-// @Router       /readyz [get]
+// @Router       /v1/readyz [get]
 func (h *Handler) Readiness(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 5000*time.Millisecond)
 	defer cancel()

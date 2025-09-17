@@ -70,7 +70,7 @@ definitions:
 info:
   contact: {}
 paths:
-  /healthz:
+  /v1/healthz:
     get:
       description: Проверка, жив ли сервис (не зависит от БД)
       produces:
@@ -83,7 +83,7 @@ paths:
       summary: Liveness probe
       tags:
       - health
-  /readyz:
+  /v1/readyz:
     get:
       description: Проверка готовности сервиса (включая пинг базы данных)
       produces:

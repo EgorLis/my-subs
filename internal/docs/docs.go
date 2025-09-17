@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/healthz": {
+        "/v1/healthz": {
             "get": {
                 "description": "Проверка, жив ли сервис (не зависит от БД)",
                 "produces": [
@@ -35,7 +35,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/readyz": {
+        "/v1/readyz": {
             "get": {
                 "description": "Проверка готовности сервиса (включая пинг базы данных)",
                 "produces": [

@@ -11,15 +11,15 @@ import (
 )
 
 func main() {
-	a, err := app.BuildMock()
+	ctx, stop := signal.NotifyContext(context.Background(),
+		os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	a, err := app.Build(ctx)
 	if err != nil {
 		log.Println("app build error:")
 		panic(err)
 	}
-
-	ctx, stop := signal.NotifyContext(context.Background(),
-		os.Interrupt, syscall.SIGTERM)
-	defer stop()
 
 	if err := a.Run(ctx); err != nil {
 		log.Println("app error:", err)
