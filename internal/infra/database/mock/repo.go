@@ -80,3 +80,20 @@ func (r *Repo) ListSubs(ctx context.Context) ([]domain.Subscription, error) {
 	}
 	return out, nil
 }
+
+func (r *Repo) TotalCost(ctx context.Context, serviceName, userID string, start, end time.Time) (int, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	totalCost := 0
+	for _, v := range r.items {
+		if v.UserID == userID && v.ServiceName == serviceName &&
+			(v.StartDate.After(start) || time.Time.Equal(v.StartDate, start)) &&
+			(end.After(v.EndDate) || time.Time.Equal(v.EndDate, end)) {
+
+			totalCost += v.Price
+		}
+	}
+
+	return totalCost, nil
+}

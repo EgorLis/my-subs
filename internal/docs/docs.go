@@ -161,6 +161,86 @@ const docTemplate = `{
                 }
             }
         },
+        "/v1/subscriptions/totalcost": {
+            "get": {
+                "description": "Получить суммарную стоимость подписок за период, с фильтрацией по пользователю и названию подписки",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "subscriptions"
+                ],
+                "summary": "Calculate total subscriptions cost",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID пользователя",
+                        "name": "user_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Название подписки",
+                        "name": "service_name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Начало периода (MM-YYYY)",
+                        "name": "from",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Конец периода (MM-YYYY)",
+                        "name": "to",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/subscription.TotalCostResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "504": {
+                        "description": "Gateway Timeout",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/v1/subscriptions/{id}": {
             "get": {
                 "description": "Получить подписку по её идентификатору",
@@ -415,6 +495,26 @@ const docTemplate = `{
                 },
                 "start_date": {
                     "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "subscription.TotalCostResponse": {
+            "type": "object",
+            "properties": {
+                "from": {
+                    "type": "string"
+                },
+                "service_name": {
+                    "type": "string"
+                },
+                "to": {
+                    "type": "string"
+                },
+                "total_cost": {
+                    "type": "integer"
                 },
                 "user_id": {
                     "type": "string"

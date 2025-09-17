@@ -39,6 +39,19 @@ definitions:
       user_id:
         type: string
     type: object
+  subscription.TotalCostResponse:
+    properties:
+      from:
+        type: string
+      service_name:
+        type: string
+      to:
+        type: string
+      total_cost:
+        type: integer
+      user_id:
+        type: string
+    type: object
   subscription.UpdateRequest:
     properties:
       end_date:
@@ -281,6 +294,61 @@ paths:
               type: string
             type: object
       summary: Update subscription
+      tags:
+      - subscriptions
+  /v1/subscriptions/totalcost:
+    get:
+      consumes:
+      - application/json
+      description: Получить суммарную стоимость подписок за период, с фильтрацией
+        по пользователю и названию подписки
+      parameters:
+      - description: ID пользователя
+        in: query
+        name: user_id
+        required: true
+        type: string
+      - description: Название подписки
+        in: query
+        name: service_name
+        required: true
+        type: string
+      - description: Начало периода (MM-YYYY)
+        in: query
+        name: from
+        required: true
+        type: string
+      - description: Конец периода (MM-YYYY)
+        in: query
+        name: to
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/subscription.TotalCostResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "504":
+          description: Gateway Timeout
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Calculate total subscriptions cost
       tags:
       - subscriptions
 swagger: "2.0"

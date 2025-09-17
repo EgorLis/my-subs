@@ -249,3 +249,67 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 
 	v1.WriteJSON(w, http.StatusOK, resp)
 }
+
+// TotalCost godoc
+// @Summary      Calculate total subscriptions cost
+// @Description  Получить суммарную стоимость подписок за период, с фильтрацией по пользователю и названию подписки
+// @Tags         subscriptions
+// @Accept       json
+// @Produce      json
+// @Param        user_id     query  string  true   "ID пользователя"
+// @Param        service_name        query  string  true   "Название подписки"
+// @Param        from        query  string  true   "Начало периода (MM-YYYY)"
+// @Param        to          query  string  true   "Конец периода (MM-YYYY)"
+// @Success      200  {object}  subscription.TotalCostResponse
+// @Failure      400  {object}  map[string]string
+// @Failure      504  {object}  map[string]string
+// @Failure      500  {object}  map[string]string
+// @Router       /v1/subscriptions/totalcost [get]
+func (h *Handler) TotalCost(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+
+	userIDStr := q.Get("user_id")
+	serviceName := q.Get("service_name")
+	fromStr := q.Get("from")
+	toStr := q.Get("to")
+
+	fromYM, err := YMFromStr(fromStr)
+	if err != nil {
+		v1.WriteError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	toYM, err := YMFromStr(toStr)
+	if err != nil {
+		v1.WriteError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if err := ValidateTotalCostQuery(userIDStr, serviceName, fromYM, toYM); err != nil {
+		v1.WriteError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5000*time.Millisecond)
+	defer cancel()
+
+	totalCost, err :=
+		h.Repo.TotalCost(ctx, serviceName, userIDStr, fromYM.ToTime(), toYM.ToTime())
+
+	if err != nil {
+		// Проверка на timeout / отмену контекста
+		if v1.IsTimeout(err) {
+			v1.WriteError(w, http.StatusGatewayTimeout, "request timed out")
+			return
+		}
+
+		log.Printf("repo error while get total cost: %v", err)
+		v1.WriteError(w, http.StatusInternalServerError, "")
+		return
+	}
+
+	resp := &TotalCostResponse{UserID: userIDStr, ServiceName: serviceName,
+		From: fromYM, To: toYM, TotalCost: totalCost}
+
+	v1.WriteJSON(w, http.StatusOK, resp)
+}

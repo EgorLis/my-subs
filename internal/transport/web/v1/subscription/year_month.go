@@ -1,6 +1,7 @@
 package subscription
 
 import (
+	"errors"
 	"strings"
 	"time"
 )
@@ -29,4 +30,17 @@ func (ym YearMonth) MarshalJSON() ([]byte, error) {
 
 func (ym YearMonth) ToTime() time.Time {
 	return time.Time(ym)
+}
+
+func YMFromStr(str string) (YearMonth, error) {
+	if str == "" {
+		return YearMonth{}, errors.New("empty string")
+	}
+	// парсим как "MM-2006"
+	t, err := time.Parse("01-2006", str)
+	if err != nil {
+		return YearMonth{}, err
+	}
+
+	return YearMonth(t), nil
 }

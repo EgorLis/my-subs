@@ -92,3 +92,27 @@ func ValidateUpdateRequest(req UpdateRequest) error {
 
 	return joinErrs(errs)
 }
+
+func ValidateTotalCostQuery(userID, serviceName string, from, to YearMonth) error {
+	var errs []string
+
+	if err := ValidateGUID(userID); err != nil {
+		errs = append(errs, "user_id: "+err.Error())
+	}
+
+	if strings.TrimSpace(serviceName) == "" {
+		errs = append(errs, "service_name: required")
+	}
+
+	if isZeroYM(from) {
+		errs = append(errs, "from: required (MM-YYYY)")
+	}
+	if isZeroYM(to) {
+		errs = append(errs, "to: required (MM-YYYY)")
+	}
+	if !isZeroYM(from) && !isZeroYM(to) && !isStartLessEnd(from, to) {
+		errs = append(errs, "date range: from must be <= to")
+	}
+
+	return joinErrs(errs)
+}

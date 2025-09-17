@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func loggingMiddleware(next http.Handler) http.Handler {
+func loggingMiddleware(next http.Handler, logger *log.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
@@ -14,7 +14,7 @@ func loggingMiddleware(next http.Handler) http.Handler {
 		lrw := &loggingResponseWriter{w, http.StatusOK}
 		next.ServeHTTP(lrw, r)
 
-		log.Printf("%s %s %d %s %s",
+		logger.Printf("%s %s %d %s %s",
 			r.Proto,
 			r.Method,
 			lrw.statusCode,

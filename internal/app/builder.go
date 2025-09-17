@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/EgorLis/my-subs/internal/config"
@@ -16,6 +17,7 @@ type App struct {
 	config *config.Config
 	db     domain.SubscriptionRepository
 	server *web.Server
+	log    *log.Logger
 }
 
 func Build() (*App, error) {
@@ -32,31 +34,36 @@ func Build() (*App, error) {
 }
 
 func BuildMock() (*App, error) {
+	base := log.New(os.Stdout, "[app] ", log.LstdFlags)
+
+	serverLog := log.New(base.Writer(), base.Prefix()+"[server] ", base.Flags())
+
 	cfg, err := config.LoadFromEnv()
 	if err != nil {
 		return nil, fmt.Errorf("failed load config: %w", err)
 	}
 
-	log.Printf("app: configuration %s-------------------", cfg)
+	base.Printf("\n  configuration: %s-------------------", cfg)
 
 	mockDB := mock.NewMockRepo()
 
-	server := web.New(cfg, mockDB)
+	server := web.New(serverLog, cfg, mockDB)
 
 	return &App{
 		config: cfg,
 		server: server,
 		db:     mockDB,
+		log:    base,
 	}, nil
 }
 
 func (a *App) Run(ctx context.Context) error {
-	log.Println("app: start application...")
+	a.log.Println("start application...")
 
 	go a.server.Run()
 
 	<-ctx.Done()
-	log.Println("app: stop application...")
+	a.log.Println("stop application...")
 
 	// graceful stop
 

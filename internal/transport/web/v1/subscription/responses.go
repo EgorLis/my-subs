@@ -17,3 +17,11 @@ type CUDResponse struct {
 type ListResponse struct {
 	Subs []SubscriptionDTO `json:"subscriptions"`
 }
+
+type TotalCostResponse struct {
+	ServiceName string    `json:"service_name"`
+	UserID      string    `json:"user_id"`
+	From        YearMonth `json:"from"`
+	To          YearMonth `json:"to"`
+	TotalCost   int       `json:"total_cost"`
+}

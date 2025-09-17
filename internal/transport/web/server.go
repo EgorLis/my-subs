@@ -15,41 +15,42 @@ import (
 )
 
 type Server struct {
+	log    *log.Logger
 	server *http.Server
 	cfg    *config.Config
 }
 
-func New(cfg *config.Config, repo domain.SubscriptionRepository) *Server {
+func New(log *log.Logger, cfg *config.Config, repo domain.SubscriptionRepository) *Server {
 	healthHandler := &health.Handler{DBPinger: repo}
 	subHandler := &subscription.Handler{Repo: repo}
 	srv := &http.Server{
 		Addr:              cfg.AppPort,
-		Handler:           newRouter(healthHandler, subHandler),
+		Handler:           newRouter(healthHandler, subHandler, log),
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      10 * time.Second,
 		MaxHeaderBytes:    1 << 20,
 		ReadHeaderTimeout: 2 * time.Second,
 		IdleTimeout:       60 * time.Second,
 	}
-	return &Server{server: srv, cfg: cfg}
+	return &Server{server: srv, cfg: cfg, log: log}
 }
 
 func (ws *Server) Run() {
-	log.Printf("server started on %s", ws.server.Addr)
+	ws.log.Printf("started on %s", ws.server.Addr)
 	if err := ws.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatalf("server error: %v", err)
+		ws.log.Fatalf("error: %v", err)
 	}
 }
 
 func (ws *Server) Close(ctx context.Context) {
 	if err := ws.server.Shutdown(ctx); err != nil {
-		log.Printf("server forced to shutdown: %v", err)
+		ws.log.Printf("forced to shutdown: %v", err)
 	}
 
-	log.Println("server exited gracefully")
+	ws.log.Println("exited gracefully")
 }
 
-func newRouter(hh *health.Handler, sh *subscription.Handler) http.Handler {
+func newRouter(hh *health.Handler, sh *subscription.Handler, log *log.Logger) http.Handler {
 	mux := http.NewServeMux()
 
 	// health
@@ -63,10 +64,13 @@ func newRouter(hh *health.Handler, sh *subscription.Handler) http.Handler {
 	mux.HandleFunc("DELETE /v1/subscriptions/{id}", sh.Delete)
 	mux.HandleFunc("GET /v1/subscriptions/{id}", sh.Get)
 
+	// total cost
+	mux.HandleFunc("GET /v1/subscriptions/totalcost", sh.TotalCost)
+
 	// swagger
 	mux.Handle("GET /swagger/", httpSwagger.WrapHandler)
 
-	loggedMux := loggingMiddleware(mux)
+	loggedMux := loggingMiddleware(mux, log)
 
 	return loggedMux
 }
