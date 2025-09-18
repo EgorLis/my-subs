@@ -21,6 +21,15 @@ services:
       - app-network
     restart: unless-stopped
 
+  # Сервис для прогонки тестов
+  test:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile
+      target: test
+    networks:
+      - app-network
+
   # База данных
   db:
     image: postgres:16-alpine

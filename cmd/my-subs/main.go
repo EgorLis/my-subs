@@ -1,3 +1,7 @@
+// @title           My Subs API
+// @version         1.0
+// @description     API для управления подписками
+// @BasePath        /
 package main
 
 import (

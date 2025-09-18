@@ -1,25 +1,35 @@
-# Используем многоступенчатую сборку
-FROM golang:1.25 AS builder
-
-WORKDIR /app
-
-# Копируем файлы модулей и загружаем зависимости
-COPY ../../go.mod ../../go.sum ./
+# =============== Base ===============
+FROM golang:1.25 AS base
+WORKDIR /src
+# НЕ фиксируем CGO здесь, чтобы стейджи могли переопределять
+COPY go.mod go.sum ./
 RUN go mod download
 
-# Копируем весь код и собираем приложение
-COPY ../../ ./
-RUN CGO_ENABLED=0 GOOS=linux go build -o /my-subs ./cmd/my-subs
+# =============== Test ===============
+FROM golang:1.25 AS test
+WORKDIR /src
+# Включаем CGO и ставим gcc для -race
+ENV CGO_ENABLED=1
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      build-essential ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+COPY . .
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    go test ./... -race -coverprofile=/tmp/coverage.out
 
-# Этап запуска
-FROM alpine:latest
+# =============== Builder ===============
+FROM golang:1.25 AS builder
+WORKDIR /src
+ENV CGO_ENABLED=0
+COPY . .
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    GOOS=linux GOARCH=amd64 go build -o /out/my-subs ./cmd/my-subs
 
+# =============== Runtime ===============
+FROM alpine:latest AS runtime
 RUN apk --no-cache add ca-certificates
-
-WORKDIR /root/
-
-# Копируем бинарник из этапа builder
-COPY --from=builder /my-subs .
-
-# Команда для запуска
-CMD ["./my-subs"]
+WORKDIR /app
+COPY --from=builder /out/my-subs /app/my-subs
+CMD ["/app/my-subs"]

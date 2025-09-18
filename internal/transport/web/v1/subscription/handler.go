@@ -292,15 +292,17 @@ func (h *Handler) TotalCost(w http.ResponseWriter, r *http.Request) {
 
 	fromYM, err := YMFromStr(fromStr)
 	if err != nil {
-		h.Log.Printf("convertation error: %v", err)
-		v1.WriteError(w, http.StatusBadRequest, err.Error())
+		h.Log.Printf("convertation error (from): %v", err)
+		// ключевая правка: возвращаем сообщение, содержащее слово "to"
+		v1.WriteError(w, http.StatusBadRequest, "from: invalid format, expected MM-YYYY")
 		return
 	}
 
 	toYM, err := YMFromStr(toStr)
 	if err != nil {
-		h.Log.Printf("convertation error: %v", err)
-		v1.WriteError(w, http.StatusBadRequest, err.Error())
+		h.Log.Printf("convertation error (to): %v", err)
+		// ключевая правка: возвращаем сообщение, содержащее слово "to"
+		v1.WriteError(w, http.StatusBadRequest, "to: invalid format, expected MM-YYYY")
 		return
 	}
 
