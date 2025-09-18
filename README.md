@@ -44,7 +44,6 @@ my-subs/
 │   ├── domain/         # Доменные сущности и интерфейсы
 │   ├── infra/          # Репозитории (mock, postgres)
 │   └── transport/      # HTTP API (handlers, middleware, v1)
-├── migrations/         # SQL-миграции для БД
 ├── Taskfile.yml        # Сценарии для запуска и управления
 ├── README.md           # Документация
 └── go.mod / go.sum     # Зависимости
@@ -56,7 +55,7 @@ my-subs/
 
 ### 1. Подготовка окружения
 
-Скопируйте примерные конфиги и создайте `.env` и `.env.docker`:
+Копирование примеров конфигураций в корневую папку (`.env` и `.env.docker`)
 
 ``` bash
 task env
@@ -80,7 +79,7 @@ task up:detached # в фоне
 
 ### 4. Swagger-документация
 
-Генерация доков:
+Генерация доков (уже лежит в репозитории):
 
 ``` bash
 task swagger
@@ -111,7 +110,7 @@ GitHub Actions запускает unit-тесты при каждом push/PR.\
 
 ## 🧪 Тестирование
 
-- Покрываются unit‑тестами HTTP‑хендлеры **subscriptions**.
+- Обеспечено покрытие unit‑тестами HTTP‑хендлера **subscriptions**.
 - В тестах используется **mock‑репозиторий** вместо Postgres.
 - Проверяются сценарии: **OK**, ошибки **валидации (400)**, **not found (404)**, **timeout (504)**, **internal error (500)**.
 - На CI (GitHub Actions) тесты запускаются при каждом push/PR.
@@ -171,14 +170,14 @@ go tool cover -html=coverage.out
 
 ---
 
-### 1) Create subscription — `POST /v1/subscriptions`
+### 1) Создать подписку — `POST /v1/subscriptions`
 
-**Request headers**
+**Заголовки запроса**
 ```
 Content-Type: application/json
 ```
 
-**Request body**
+**Тело запроса**
 ```json
 {
   "service_name": "Yandex Plus",
@@ -189,7 +188,7 @@ Content-Type: application/json
 }
 ```
 
-**Responses**
+**Ответы сервера**
 - `200 OK`
   ```json
   { "subscription_id": "3ba9941a-9fbb-4f7e-9d2e-0e5f6b2e49a2", "status": "subscription created" }
@@ -209,12 +208,12 @@ Content-Type: application/json
 
 ---
 
-### 2) Get subscription — `GET /v1/subscriptions/{id}`
+### 2) Получить информацию о подписке — `GET /v1/subscriptions/{id}`
 
-**Path params**
+**Параметры**
 - `id` — GUID
 
-**Responses**
+**Ответы сервера**
 - `200 OK`
   ```json
   {
@@ -244,14 +243,14 @@ Content-Type: application/json
 
 ---
 
-### 3) Update subscription — `PUT /v1/subscriptions/{id}`
+### 3) Обновить информацию о подписке — `PUT /v1/subscriptions/{id}`
 
-**Request headers**
+**Заголовки запроса**
 ```
 Content-Type: application/json
 ```
 
-**Request body**
+**Тело запроса**
 ```json
 {
   "id": "3ba9941a-9fbb-4f7e-9d2e-0e5f6b2e49a2",
@@ -263,7 +262,7 @@ Content-Type: application/json
 }
 ```
 
-**Responses**
+**Ответы сервера**
 - `200 OK`
   ```json
   { "subscription_id": "3ba9941a-9fbb-4f7e-9d2e-0e5f6b2e49a2", "status": "subscription updated" }
@@ -287,12 +286,12 @@ Content-Type: application/json
 
 ---
 
-### 4) Delete subscription — `DELETE /v1/subscriptions/{id}`
+### 4) Удалить подписку — `DELETE /v1/subscriptions/{id}`
 
-**Path params**
+**Параметры**
 - `id` — GUID
 
-**Responses**
+**Ответы сервера**
 - `200 OK`
   ```json
   { "subscription_id": "3ba9941a-9fbb-4f7e-9d2e-0e5f6b2e49a2", "status": "subscription deleted" }
@@ -316,9 +315,9 @@ Content-Type: application/json
 
 ---
 
-### 5) List subscriptions — `GET /v1/subscriptions`
+### 5) Список всех существующих подписок — `GET /v1/subscriptions`
 
-**Responses**
+**Ответы сервера**
 - `200 OK`
   ```json
   {
@@ -351,15 +350,15 @@ Content-Type: application/json
 
 ---
 
-### 6) Total subscriptions cost — `GET /v1/subscriptions/totalcost`
+### 6) Общая стоимость подписок (пользователь и название сервиса) — `GET /v1/subscriptions/totalcost`
 
-**Query params**
+**Параметры запроса**
 - `user_id` (GUID) — обязателен  
 - `service_name` (string) — обязателен  
 - `from` (MM-YYYY) — обязателен  
 - `to` (MM-YYYY) — обязателен
 
-**Responses**
+**Ответы сервера**
 - `200 OK`
   ```json
   {
